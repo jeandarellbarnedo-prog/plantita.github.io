@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "970717509489",
+    "project_id": "plantita-93e26",
+    "storage_bucket": "plantita-93e26.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970717509489:android:c4f3b91c9bd19ed74468d0",
+        "android_client_info": {
+          "package_name": "com.example.plantita"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlYAdz5r3ZmsnbBxYRauay7TXOGLDsLVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

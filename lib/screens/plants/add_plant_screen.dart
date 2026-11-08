@@ -215,43 +215,36 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
                 'Plant Type:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Non-Flowering'),
-                      value: 'Non-Flowering',
-                      fillColor: _radioFill,
-                      groupValue: _plantType,
-                      onChanged: (value) => setState(() => _plantType = value!),
-                    ),
+                  RadioListTile<String>(
+                    title: const Text('Non-Flowering'),
+                    value: 'Non-Flowering',
+                    fillColor: _radioFill,
+                    groupValue: _plantType,
+                    onChanged: (value) => setState(() => _plantType = value!),
                   ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Fruit'),
-                      value: 'Fruit',
-                      fillColor: _radioFill,
-                      groupValue: _plantType,
-                      onChanged: (value) => setState(() => _plantType = value!),
-                    ),
+                  RadioListTile<String>(
+                    title: const Text('Fruit'),
+                    value: 'Fruit',
+                    fillColor: _radioFill,
+                    groupValue: _plantType,
+                    onChanged: (value) => setState(() => _plantType = value!),
                   ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Vegetable'),
-                      value: 'Vegetable',
-                      fillColor: _radioFill,
-                      groupValue: _plantType,
-                      onChanged: (value) => setState(() => _plantType = value!),
-                    ),
+                  RadioListTile<String>(
+                    title: const Text('Vegetable'),
+                    value: 'Vegetable',
+                    fillColor: _radioFill,
+                    groupValue: _plantType,
+                    onChanged: (value) => setState(() => _plantType = value!),
                   ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Flower'),
-                      value: 'Flower',
-                      fillColor: _radioFill,
-                      groupValue: _plantType,
-                      onChanged: (value) => setState(() => _plantType = value!),
-                    ),
+                  RadioListTile<String>(
+                    title: const Text('Flower'),
+                    value: 'Flower',
+                    fillColor: _radioFill,
+                    groupValue: _plantType,
+                    onChanged: (value) => setState(() => _plantType = value!),
                   ),
                 ],
               ),
@@ -360,3 +353,5 @@ class _AddPlantScreenState extends State<AddPlantScreen> {
     );
   }
 }
+
+

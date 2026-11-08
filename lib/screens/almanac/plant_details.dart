@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_plant.dart';
-import 'note_form.dart';
 import 'almanac_note.dart';
+import 'note_form.dart';
 import 'package:plantita/widgets/note_preview_card.dart';
 
 const Color kBackground = Color(0xFFDAD8CE);
@@ -169,6 +169,7 @@ class PlantInfoScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 children: [
                   const SizedBox(height: 8),
+                  // Unified White Container for Image + Plant Info Details
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -176,86 +177,82 @@ class PlantInfoScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: kBorderGreen),
                     ),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            width: 200,
-                            height: 200,
-                            color: kHeaderGreen.withValues(alpha: 0.15),
-                            child: imageProvider != null
-                                ? Image(
-                                    image: imageProvider,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.broken_image,
-                                              color: kHeaderGreen,
-                                              size: 32,
-                                            ),
-                                  )
-                                : const Icon(
-                                    Icons.yard_outlined,
-                                    color: kHeaderGreen,
-                                    size: 36,
-                                  ),
+                        Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              width: 200,
+                              height: 200,
+                              color: kHeaderGreen.withValues(alpha: 0.15),
+                              child: imageProvider != null
+                                  ? Image(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(
+                                                Icons.broken_image,
+                                                color: kHeaderGreen,
+                                                size: 32,
+                                              ),
+                                    )
+                                  : const Icon(
+                                      Icons.yard_outlined,
+                                      color: kHeaderGreen,
+                                      size: 40,
+                                    ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: kDarkGreen,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                type,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: kTextGreen,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Added: $formattedDate',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              if (waterInterval > 0)
-                                Text(
-                                  'Water: ${waterAmount}mL every $waterInterval days',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              if (fertilizerInterval > 0)
-                                Text(
-                                  'Fertilizer: $fertilizerName (${fertilizerAmount}g) every $fertilizerInterval days',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                            ],
+                        const SizedBox(height: 16),
+                        // Following text details displayed below the image
+                        Text(
+                          name.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: kDarkGreen,
+                            letterSpacing: 0.5,
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          type,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: kTextGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Added: $formattedDate',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (waterInterval > 0)
+                          Text(
+                            'Water: ${waterAmount}mL every $waterInterval days',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        if (fertilizerInterval > 0)
+                          Text(
+                            'Fertilizer: $fertilizerName (${fertilizerAmount}g) every $fertilizerInterval days',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -337,11 +334,10 @@ class PlantInfoScreen extends StatelessWidget {
                         itemCount: notes.length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3, // 3 columns per row
+                              crossAxisCount: 3,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
-                              childAspectRatio:
-                                  0.7, // Portrait rectangle aspect ratio
+                              childAspectRatio: 0.7,
                             ),
                         itemBuilder: (context, index) {
                           final doc = notes[index];
@@ -354,10 +350,8 @@ class PlantInfoScreen extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PlantNoteDetailScreen(
-                                    plantDocId:
-                                        plantDocId, // Pass the parent plant ID
-                                    noteDocId: doc
-                                        .id, // Pass the individual note document ID
+                                    plantDocId: plantDocId,
+                                    noteDocId: doc.id,
                                     noteData: data,
                                   ),
                                 ),
@@ -378,3 +372,4 @@ class PlantInfoScreen extends StatelessWidget {
     );
   }
 }
+

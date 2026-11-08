@@ -1,168 +1,198 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+const Color kBackground = Color(0xFFDAD8CE);
 const Color kHeaderGreen = Color(0xFF587F59);
 const Color kDarkGreen = Color(0xFF304E40);
 const Color kTextGreen = Color(0xFF315A47);
-const Color kCardColor = Color(0xFFE9E7DC);
 const Color kBorderGreen = Color(0xFFC4C9B4);
+const Color kCardColor = Color(0xFFE9E7DC);
 
 class PlantCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final DateTime cardDate;
+  final VoidCallback? onTap;
 
-  const PlantCard({super.key, required this.data, required this.cardDate});
+  const PlantCard({
+    super.key,
+    required this.data,
+    required this.cardDate,
+    this.onTap,
+  });
+
+  bool _isTaskDue(Timestamp? startDate, int intervalDays, DateTime targetDate) {
+    if (startDate == null || intervalDays <= 0) return false;
+    final start = startDate.toDate();
+    final startDay = DateTime(start.year, start.month, start.day);
+    final targetDay = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+    );
+
+    final difference = targetDay.difference(startDay).inDays;
+    if (difference < 0) return false;
+    return difference % intervalDays == 0;
+  }
 
   @override
   Widget build(BuildContext context) {
-    String name = data['name'] ?? 'Unnamed Plant';
-    String type = data['type'] ?? 'Plant';
-    int waterAmount = data['waterAmountMl'] ?? 0;
-    int interval = data['waterIntervalDays'] ?? 0;
+    final name = data['name'] ?? 'Plant';
+    final type = data['type'] ?? 'Plant';
+    final waterAmount = data['waterAmountMl'] ?? 0;
+    final waterInterval = data['waterIntervalDays'] ?? 0;
+    final fertilizerName = data['fertilizerName'] ?? 'Manure';
+    final fertilizerAmount = data['fertilizerAmountG'] ?? 0;
+    final fertilizerInterval = data['fertilizerIntervalDays'] ?? 0;
 
-    String fertilizerName = data['fertilizerName'] ?? '';
-    int fertilizerAmount = data['fertilizerAmountG'] ?? 0;
-    int fertilizerInterval = data['fertilizerIntervalDays'] ?? 0;
+    final int harvestInterval =
+        data['harvestIntervalDays'] ?? data['harvestDays'] ?? 0;
+    final bool isRepeatingHarvest = data['isRepeatingHarvest'] ?? false;
+    final Timestamp? startDate = data['startDate'];
 
-    bool canBeHarvested = data['canBeHarvested'] ?? false;
-    bool harvestRepeatedly = data['harvestRepeatedly'] ?? false;
-    int harvestDays = data['harvestDays'] ?? 0;
+    // CRITICAL: If one-time harvest has passed, hide card completely immediately
+    if (startDate != null && harvestInterval > 0 && !isRepeatingHarvest) {
+      final start = startDate.toDate();
+      final startDay = DateTime(start.year, start.month, start.day);
+      final targetDay = DateTime(cardDate.year, cardDate.month, cardDate.day);
+      if (targetDay.difference(startDay).inDays > harvestInterval) {
+        return const SizedBox.shrink();
+      }
+    }
 
-    String harvestStatus = '';
+    final bool waterDue = _isTaskDue(startDate, waterInterval, cardDate);
+    final bool fertilizerDue = _isTaskDue(
+      startDate,
+      fertilizerInterval,
+      cardDate,
+    );
 
-    if (canBeHarvested == true && harvestDays > 0) {
-      Timestamp? startTimestamp = data['startDate'];
-      if (startTimestamp != null) {
-        DateTime startDate = startTimestamp.toDate();
-        DateTime cleanStart = DateTime(
-          startDate.year,
-          startDate.month,
-          startDate.day,
-        );
+    bool harvestDue = false;
+    String? harvestStatusText;
+    bool harvestCardNeeded = false;
 
-        int daysPassedOnCard = cardDate.difference(cleanStart).inDays;
+    if (startDate != null && harvestInterval > 0) {
+      final start = startDate.toDate();
+      final startDay = DateTime(start.year, start.month, start.day);
+      final targetDay = DateTime(cardDate.year, cardDate.month, cardDate.day);
+      final diff = targetDay.difference(startDay).inDays;
 
-        if (harvestRepeatedly == true) {
-          if (daysPassedOnCard > 0 && daysPassedOnCard % harvestDays == 0) {
-            harvestStatus = 'Harvest Day!';
+      if (diff >= 0) {
+        if (isRepeatingHarvest) {
+          harvestCardNeeded = true;
+          final cycle = harvestInterval + 1;
+          final remainder = diff % cycle;
+
+          if (diff > 0 && remainder == 0) {
+            harvestDue = true;
+            harvestStatusText = 'Ready for harvest today!';
           } else {
-            int remainder = daysPassedOnCard % harvestDays;
-            int daysRemaining = harvestDays - remainder;
-            DateTime exactHarvestDate = cardDate.add(
-              Duration(days: daysRemaining),
-            );
-            String formattedDate =
-                '${['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][exactHarvestDate.month - 1]} ${exactHarvestDate.day}, ${exactHarvestDate.year}';
-            harvestStatus =
-                'Next harvest in $daysRemaining days ($formattedDate)';
+            final daysRemaining = cycle - remainder;
+            harvestStatusText =
+                'Next harvest in $daysRemaining ${daysRemaining == 1 ? 'day' : 'days'}';
           }
         } else {
-          if (daysPassedOnCard == harvestDays) {
-            harvestStatus = 'Harvest Day!';
-          } else {
-            int daysRemaining = harvestDays - daysPassedOnCard;
-            DateTime exactHarvestDate = cleanStart.add(
-              Duration(days: harvestDays),
-            );
-            String formattedDate =
-                '${['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][exactHarvestDate.month - 1]} ${exactHarvestDate.day}, ${exactHarvestDate.year}';
+          final daysRemaining = harvestInterval - diff;
 
-            if (daysRemaining > 0) {
-              harvestStatus = 'Harvest in $daysRemaining days ($formattedDate)';
-            }
+          if (daysRemaining > 0) {
+            harvestCardNeeded = true;
+            harvestStatusText =
+                'Next harvest in $daysRemaining ${daysRemaining == 1 ? 'day' : 'days'}';
+          } else if (daysRemaining == 0) {
+            harvestCardNeeded = true;
+            harvestDue = true;
+            harvestStatusText = 'Ready for harvest today!';
           }
         }
       }
     }
 
-    List<Widget> columnChildren = [
-      Text(
-        name,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w900,
-          color: kDarkGreen,
-        ),
-      ),
-      const SizedBox(height: 2),
-      Text(type, style: const TextStyle(fontSize: 12, color: kTextGreen)),
-      const SizedBox(height: 4),
-      Text(
-        'Water: ' +
-            waterAmount.toString() +
-            'mL (Every ' +
-            interval.toString() +
-            ' days)',
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-      ),
-    ];
-
-    if (fertilizerName != '') {
-      columnChildren.add(const SizedBox(height: 2));
-      columnChildren.add(
-        Text(
-          'Fertilizer: ' +
-              fertilizerName +
-              ' (' +
-              fertilizerAmount.toString() +
-              'g, Every ' +
-              fertilizerInterval.toString() +
-              ' days)',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-      );
+    if (!waterDue && !fertilizerDue && !harvestCardNeeded) {
+      return const SizedBox.shrink();
     }
 
-    if (canBeHarvested == true && harvestStatus != '') {
-      columnChildren.add(const SizedBox(height: 2));
-      columnChildren.add(
-        Text(
-          harvestStatus,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: kHeaderGreen,
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kCardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kBorderGreen),
         ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: kCardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorderGreen, width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: kHeaderGreen.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: kHeaderGreen.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.water_drop,
+                color: kHeaderGreen,
+                size: 24,
+              ),
             ),
-            child: const Icon(Icons.water_drop, color: kHeaderGreen, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: columnChildren,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: kDarkGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    type,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: kTextGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (waterDue)
+                    Text(
+                      'Water: ${waterAmount}mL (Every $waterInterval days)',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  if (fertilizerDue)
+                    Text(
+                      'Fertilizer: $fertilizerName (${fertilizerAmount}g, Every $fertilizerInterval days)',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  if (harvestStatusText != null)
+                    Text(
+                      harvestStatusText!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: harvestDue ? kHeaderGreen : kTextGreen,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
+
